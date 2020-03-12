@@ -55,21 +55,31 @@ int main() {
         inp_line.open(name + ".postline");
     }
     cout << "\nSuccess!\n\n";
-    while (inp_line) {
-        getline(inp_line, str);
-        for (size_t i = 0; i < str.size(); ++i) {
-            if (str[i] == '1') {
-                line.push_back(true);
-            } else if (str[i] == '0') {
-                line.push_back(false);
-            } else {
-                cerr << "UNEXPECTED SYMBOL " << str[i] << " IN " << name << ".postline!" << "\n";
-                return 0;
-            }
+    getline(inp_line, str);
+    try {
+        curr = stoi(str) - 1;
+    } catch (std::invalid_argument& e) {
+        cerr << "Cannot extract head's position from " << name + ".postline!\nSetting position to 1!\n";
+        curr = 0;
+    }
+    getline(inp_line, str);
+    for (size_t i = 0; i < str.size(); ++i) {
+        if (str[i] == '1') {
+            line.push_back(true);
+        } else if (str[i] == '0') {
+            line.push_back(false);
+        } else {
+            cerr << "Unexpected symbol: " << str[i] << " in " << name << ".postline!" << "\n";
+            return 0;
         }
     }
     inp_line.close();
     for (size_t i = 0; i < prog.size(); ++i) {
+        /*cout << curr << ' ';
+        for (size_t i = 0; i < line.size(); ++i) {
+            cout << static_cast<char>(line[i]);
+        }
+        cout << '\n';*/
         str = prog[i];
         auto pa1 = word(str, 0);
         if (curr < 0 && curr >= line.size()) {
@@ -88,6 +98,7 @@ int main() {
                 }
                 if (line[curr]) {
                     cerr << "Marking an already marked slot!\nShutting down...\n";
+                    break;
                 } else {
                     line[curr] = true;
                 }
@@ -95,8 +106,7 @@ int main() {
                 cerr << "Expected integer or empty space in line " << i << ", found " << pa2.first << '\n';
                 break;
             }
-        }
-        if (pa1.first == "X") {
+        } else if (pa1.first == "X") {
             auto pa2 = word(str, pa1.second);
             try {
                 if (pa2.first == "") {
@@ -108,6 +118,7 @@ int main() {
                 }
                 if (!line[curr]) {
                     cerr << "Cannot remove a mark from an unmarked slot!\nShutting down...\n";
+                    break;
                 } else {
                     line[curr] = false;
                 }
@@ -115,8 +126,7 @@ int main() {
                 cerr << "Expected integer or empty space in line " << i << ", found " << pa2.first << '\n';
                 break;
             }
-        }
-        if (pa1.first == "<") {
+        } else if (pa1.first == "<") {
             auto pa2 = word(str, pa1.second);
             try {
                 if (pa2.first == "") {
@@ -131,8 +141,7 @@ int main() {
                 cerr << "Expected integer or empty space in line " << i << ", found " << pa2.first << '\n';
                 break;
             }
-        }
-        if (pa1.first == ">") {
+        } else if (pa1.first == ">") {
             auto pa2 = word(str, pa1.second);
             try {
                 if (pa2.first == "") {
@@ -147,11 +156,10 @@ int main() {
                 cerr << "Expected integer or empty space in line " << i << ", found " << pa2.first << '\n';
                 break;
             }
-        }
-        if (pa1.first == "?") {
+        } else if (pa1.first == "?") {
             auto pa2 = word(str, pa1.second);
             auto pa3 = word(str, pa2.second);
-            if (line[curr]) {
+            if (!line[curr]) {
                 try {
                     auto temp = stoi(pa2.first);
                     i = temp - 1;
@@ -168,16 +176,20 @@ int main() {
                     break;
                 }
             }
-        }
-        if (pa1.first == "!") {
+        } else if (pa1.first == "!") {
             cout << "Found !, shutting down...\n";
             break;
         }
     }
     ofstream fout;
     fout.open(name + " output.postline");
+    fout << to_string(curr) << '\n';
     for (size_t i = 0; i < line.size(); ++i) {
-        fout << static_cast<int>(line[i]);
+        if (line[i]) {
+            fout << "1";
+        } else {
+            fout << "0";
+        }
     }
     fout.close();
 }
